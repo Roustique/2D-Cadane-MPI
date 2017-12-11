@@ -2,6 +2,7 @@ Program main
 use Homework
 use MatrixSize
 implicit none
+!include "mpif.h"
 real(8), dimension(:,:), allocatable :: A
 integer(4) x1, y1, x2, y2, i
 allocate(A(height,length))

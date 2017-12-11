@@ -1,16 +1,18 @@
-G=gfortran
-mp=-fopenmp
+M=mpiifort
+I=ifort
 main.out: Homework.o main.o
-	$(G) $^ $(mp) -o $@
+	$(M) $^ -o $@
 main.o: main.f90 matrixsize.mod
-	$(G) $(mp) -c $<
+	$(I) -c $<
 Homework.o: Homework.f90
-	$(G) $(mp) -c $<
+	$(M) -c $<
 matrixsize.mod: MSize.f90
-	$(G) -c $<
+	$(I) -c $<
 debug: Homeworkdebug maindebug
-	$(G) Homework.o main.o -o maintest.out $(mp) -g
+	$(M) Homework.o main.o -o maintest.out -g
 Homeworkdebug: Homework.f90
-	$(G) -c $< $(mp) -g
+	$(M) -c $< -g
 maindebug: main.f90 matrixsize.mod
-	$(G) -c $< $(mp) -g
+	$(I) -c $< -g
+exe: main.out
+	mpiexec -np 4 ./main.out < vvod
