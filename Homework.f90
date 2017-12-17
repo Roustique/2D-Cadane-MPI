@@ -2,7 +2,7 @@ module Homework
 contains
 subroutine FindMaxCoordinates(A, x1, y1, x2, y2)
 include "mpif.h"
-real(8), intent(in), allocatable, dimension(:,:) :: A
+real(8), intent(in), dimension(:,:) :: A
 real(8), dimension(size(A(:,1))) :: B
 integer(4), intent(out) :: x1, y1, x2, y2
 integer(4) n, m, i, j, k, minn, maxx, x, y
@@ -51,7 +51,10 @@ do i=mpiRank,n,mpiSize
    t(3)=minn
    t(4)=maxx
   endif
-  if (mpiRank == 0) then
+ enddo
+enddo
+
+if (mpiRank == 0) then
    maxS=tmaxS
    x1=t(1)
    x2=t(2)
@@ -71,10 +74,8 @@ do i=mpiRank,n,mpiSize
   else
    call mpi_send(t, 4, MPI_INTEGER4, 0, mpiRank, MPI_COMM_WORLD, mpiErr)
    call mpi_send(tmaxS, 1, MPI_REAL8, 0, (mpiRank+4), MPI_COMM_WORLD, mpiErr)
-  endif
- enddo
- 
-enddo
+endif
+
 call mpi_bcast(x1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_bcast(x2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_bcast(y1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
