@@ -1,7 +1,8 @@
 program Tester
 use :: Homework
 implicit none
-    integer(4) :: sizeX, sizeY, i, j
+include "mpif.h"
+    integer(4) :: sizeX, sizeY, i, j, mpiErr
     integer(4) :: referenceX1,referenceX2,referenceY1,referenceY2,x1,y1,x2,y2
     real(8), allocatable, dimension(:,:) :: matrix
     real(8) :: summ, referenceSumm
@@ -14,7 +15,9 @@ implicit none
     read(1) matrix
     close(1)
 
+    call mpi_init(mpiErr)
     call FindMaxCoordinates(matrix, x1, y1, x2, y2)
+    call mpi_finalize(mpiErr)
 
     referenceSumm = 0d0
     do i=referenceX1, referenceX2

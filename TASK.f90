@@ -13,7 +13,6 @@ X=0; tx1=1; tx2=1; ty1=1; ty2=1; tmaxS=A(1,1); maxS=A(1,1)
 m=size(A(:,1))
 n=size(A(1,:))
 
-call mpi_init(mpiErr)
 call mpi_comm_size(MPI_COMM_WORLD, mpiSize, mpiErr)
 call mpi_comm_rank(MPI_COMM_WORLD, mpiRank, mpiErr)
 
@@ -90,6 +89,5 @@ call mpi_bcast(x1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_bcast(x2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_bcast(y1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_bcast(y2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
-call mpi_finalize(mpiErr)
 end subroutine
 end module
