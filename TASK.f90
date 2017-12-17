@@ -1,22 +1,17 @@
 module Homework
 contains
 subroutine FindMaxCoordinates(A, x1, y1, x2, y2)
-include "mpif.h"
-real(8), intent(in), dimension(:,:) :: A
+real(8), intent(in), allocatable, dimension(:,:) :: A
 real(8), dimension(size(A(:,1))) :: B
 integer(4), intent(out) :: x1, y1, x2, y2
-integer(4) n, m, i, j, k, minn, maxx, x, y, tx1, tx2, ty1, ty2
-integer(4) mpiErr, mpiSize, mpiRank
-real(8) pr, S, maxS, tmaxS
+integer(4) n, m, i, j, k, minn, maxx, x, y
+real(8) pr, S, maxS
 
-X=0; tx1=1; tx2=1; ty1=1; ty2=1; tmaxS=A(1,1); maxS=A(1,1)
+X=0; x1=1; x2=1; y1=1; y2=1; maxS=A(1,1)
 m=size(A(:,1))
 n=size(A(1,:))
 
-call mpi_comm_size(MPI_COMM_WORLD, mpiSize, mpiErr)
-call mpi_comm_rank(MPI_COMM_WORLD, mpiRank, mpiErr)
-
-do i=mpiRank,n,mpiSize
+do i=1,n
 
  do k=1,m
   B(k)=0
@@ -40,54 +35,18 @@ do i=mpiRank,n,mpiSize
     minn=x
     maxx=y
    endif
-
+   !write(*,*)B,S
   enddo
-  if (S>tmaxS) then
-   tmaxS=S
-   tx1=minn
-   tx2=maxx
-   ty1=i
-   ty2=j
+  if (S>maxS) then
+   maxS=S
+   x1=i
+   x2=j
+   y1=minn
+   y2=maxx
   endif
  enddo
+ 
 enddo
-
-!call mpi_barrier(MPI_COMM_WORLD, mpiErr)
-
-
-if (mpiRank /= 0) then
-  do k=1,(mpiSize-1)
-   if (mpiRank==k) then
-    call mpi_send(tx1, 1, MPI_INTEGER4, 0, 5*(k-1), MPI_COMM_WORLD, mpiErr)
-    call mpi_send(tx2, 1, MPI_INTEGER4, 0, 5*(k-1)+1, MPI_COMM_WORLD, mpiErr)
-    call mpi_send(ty1, 1, MPI_INTEGER4, 0, 5*(k-1)+2, MPI_COMM_WORLD, mpiErr)
-    call mpi_send(ty2, 1, MPI_INTEGER4, 0, 5*(k-1)+3, MPI_COMM_WORLD, mpiErr)
-    call mpi_send(tmaxS, 1, MPI_REAL8, 0, 5*(k-1)+4, MPI_COMM_WORLD, mpiErr)
-   endif
-  enddo
-else
-   do k=1,(mpiSize-1)
-    call mpi_recv(tx1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1), MPI_COMM_WORLD, status, mpiErr)
-    call mpi_recv(tx2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+1, MPI_COMM_WORLD, status, mpiErr)
-    call mpi_recv(ty1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+2, MPI_COMM_WORLD, status, mpiErr)
-    call mpi_recv(ty2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+3, MPI_COMM_WORLD, status, mpiErr)
-    call mpi_recv(tmaxS, 1, MPI_REAL8, MPI_ANY_SOURCE, 5*(k-1)+4, MPI_COMM_WORLD, status, mpiErr)
-    !write(*,*)tx1, tx2, ty1, ty2
-    if (tmaxS>=maxS) then
-     maxS=tmaxS
-     x1=tx1
-     x2=tx2
-     y1=ty1
-     y2=ty2    
-    endif
-   enddo
-endif
-
-!call mpi_barrier(MPI_COMM_WORLD, mpiErr)
-
-call mpi_bcast(x1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
-call mpi_bcast(x2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
-call mpi_bcast(y1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
-call mpi_bcast(y2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
+write(*,*)maxS
 end subroutine
 end module
