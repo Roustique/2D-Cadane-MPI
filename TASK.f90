@@ -41,7 +41,7 @@ do i=mpiRank,n,mpiSize
     minn=x
     maxx=y
    endif
-   !write(*,*)B,S
+
   enddo
   if (S>tmaxS) then
    tmaxS=S
@@ -53,7 +53,7 @@ do i=mpiRank,n,mpiSize
  enddo
 enddo
 
-!write(*,*)tmaxS, mpiRank
+
 if (mpiRank == 0) then
    do k=1,(mpiSize-1)
     call mpi_recv(tx1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1), MPI_COMM_WORLD, status, mpiErr)
@@ -67,12 +67,9 @@ if (mpiRank == 0) then
      x1=tx1
      x2=tx2
      y1=ty1
-     y2=ty2  
-     !write(*,*)x1  
+     y2=ty2    
     endif
-    !write(*,*)maxS
    enddo
-   !write(*,*)x1, x2, y1, y2
   else
    call mpi_send(tx1, 1, MPI_INTEGER4, 0, 5*(mpiRank-1), MPI_COMM_WORLD, mpiErr)
    call mpi_send(tx2, 1, MPI_INTEGER4, 0, 5*(mpiRank-1)+1, MPI_COMM_WORLD, mpiErr)
@@ -86,6 +83,5 @@ call mpi_bcast(x2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_bcast(y1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_bcast(y2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_finalize(mpiErr)
-!write(*,*)maxS
 end subroutine
 end module
