@@ -61,8 +61,10 @@ if (mpiRank == 0) then
     call mpi_recv(ty1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+2, MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(ty2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+3, MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(tmaxS, 1, MPI_REAL8, MPI_ANY_SOURCE, 5*(k-1)+4, MPI_COMM_WORLD, status, mpiErr)
+
     write(*,*)tx1, tx2, ty1, ty2
-    if ((tmaxS>maxS).AND.(tx2/=0)) then
+    !write(*,*)tmaxS
+    if (tmaxS>=maxS) then
      maxS=tmaxS
      x1=tx1
      x2=tx2
