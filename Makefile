@@ -7,10 +7,10 @@ Tester.o: Tester.f90
 TASK.o: TASK.f90
 	$(M) -c $<
 debug: Homeworkdebug maindebug
-	$(M) TASK.o Tester.o -o maintest.out -g
+	$(M) TASK.o Tester.o -o maintest.out -debug
 Homeworkdebug: TASK.f90
-	$(M) -c $< -g
+	$(M) -c $< -debug
 maindebug: Tester.f90
-	$(I) -c $< -g
+	$(I) -c $< -debug
 exe: main.out
 	mpiexec -np 4 ./main.out

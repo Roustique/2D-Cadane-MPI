@@ -53,17 +53,27 @@ do i=mpiRank,n,mpiSize
  enddo
 enddo
 
+!call mpi_barrier(MPI_COMM_WORLD, mpiErr)
 
-if (mpiRank == 0) then
+
+if (mpiRank /= 0) then
+  do k=1,(mpiSize-1)
+   if (mpiRank==k) then
+    call mpi_send(tx1, 1, MPI_INTEGER4, 0, 5*(k-1), MPI_COMM_WORLD, mpiErr)
+    call mpi_send(tx2, 1, MPI_INTEGER4, 0, 5*(k-1)+1, MPI_COMM_WORLD, mpiErr)
+    call mpi_send(ty1, 1, MPI_INTEGER4, 0, 5*(k-1)+2, MPI_COMM_WORLD, mpiErr)
+    call mpi_send(ty2, 1, MPI_INTEGER4, 0, 5*(k-1)+3, MPI_COMM_WORLD, mpiErr)
+    call mpi_send(tmaxS, 1, MPI_REAL8, 0, 5*(k-1)+4, MPI_COMM_WORLD, mpiErr)
+   endif
+  enddo
+else
    do k=1,(mpiSize-1)
     call mpi_recv(tx1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1), MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(tx2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+1, MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(ty1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+2, MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(ty2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+3, MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(tmaxS, 1, MPI_REAL8, MPI_ANY_SOURCE, 5*(k-1)+4, MPI_COMM_WORLD, status, mpiErr)
-
-    write(*,*)tx1, tx2, ty1, ty2
-    !write(*,*)tmaxS
+    !write(*,*)tx1, tx2, ty1, ty2
     if (tmaxS>=maxS) then
      maxS=tmaxS
      x1=tx1
@@ -72,13 +82,9 @@ if (mpiRank == 0) then
      y2=ty2    
     endif
    enddo
-  else
-   call mpi_send(tx1, 1, MPI_INTEGER4, 0, 5*(mpiRank-1), MPI_COMM_WORLD, mpiErr)
-   call mpi_send(tx2, 1, MPI_INTEGER4, 0, 5*(mpiRank-1)+1, MPI_COMM_WORLD, mpiErr)
-   call mpi_send(ty1, 1, MPI_INTEGER4, 0, 5*(mpiRank-1)+2, MPI_COMM_WORLD, mpiErr)
-   call mpi_send(ty2, 1, MPI_INTEGER4, 0, 5*(mpiRank-1)+3, MPI_COMM_WORLD, mpiErr)
-   call mpi_send(tmaxS, 1, MPI_REAL8, 0, 5*(mpiRank-1)+4, MPI_COMM_WORLD, mpiErr)
 endif
+
+!call mpi_barrier(MPI_COMM_WORLD, mpiErr)
 
 call mpi_bcast(x1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 call mpi_bcast(x2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
