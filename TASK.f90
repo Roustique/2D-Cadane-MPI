@@ -1,52 +1,94 @@
 module Homework
 contains
 subroutine FindMaxCoordinates(A, x1, y1, x2, y2)
-real(8), intent(in), allocatable, dimension(:,:) :: A
+include "mpif.h"
+real(8), intent(in), dimension(:,:) :: A
 real(8), dimension(size(A(:,1))) :: B
 integer(4), intent(out) :: x1, y1, x2, y2
-integer(4) n, m, i, j, k, minn, maxx, x, y
-real(8) pr, S, maxS
+integer(4) Alength, Aheight, i, j, k, bottom_border, upper_border, x, y, thread_x1, thread_x2, thread_y1, thread_y2
+integer(4) mpiErr, mpiSize, mpiRank
+real(8) previous_Summ, Summ, maxSumm, thread_maxSumm
 
-X=0; x1=1; x2=1; y1=1; y2=1; maxS=A(1,1)
-m=size(A(:,1))
-n=size(A(1,:))
+thread_x1=1; thread_x2=1; thread_y1=1; thread_y2=1; thread_maxSumm=A(1,1); maxSumm=A(1,1)
+Aheight=size(A(:,1))
+Alength=size(A(1,:))
 
-do i=1,n
+call mpi_comm_size(MPI_COMM_WORLD, mpiSize, mpiErr)
+call mpi_comm_rank(MPI_COMM_WORLD, mpiRank, mpiErr)
 
- do k=1,m
+do i=mpiRank,Alength,(mpiSize-1)
+
+ do k=1,Aheight
   B(k)=0
  enddo
 
- do j=i,n
+ do j=i,Alength
   B=B+A(:,j)
-  pr=B(1); x=1; y=1
-  S=pr; minn=x; maxx=y
-  do k=2,m
-   if (B(k)>(B(k)+pr)) then
+  previous_Summ=B(1); x=1; y=1
+  Summ=previous_Summ; bottom_border=x; upper_border=y
+  do k=2,Aheight
+   if (B(k)>(B(k)+previous_Summ)) then
     x=k
     y=k
-    pr=B(k)
+    previous_Summ=B(k)
    else
     y=k
-    pr=B(k)+pr
+    previous_Summ=B(k)+previous_Summ
    endif
-   if (pr>S) then
-    S=pr
-    minn=x
-    maxx=y
+   if (previous_Summ>Summ) then
+    Summ=previous_Summ
+    bottom_border=x
+    upper_border=y
    endif
-   !write(*,*)B,S
+
   enddo
-  if (S>maxS) then
-   maxS=S
-   x1=i
-   x2=j
-   y1=minn
-   y2=maxx
+  if (Summ>thread_maxSumm) then
+   thread_maxSumm=Summ
+   thread_x1=bottom_border
+   thread_x2=upper_border
+   thread_y1=i
+   thread_y2=j
   endif
  enddo
- 
 enddo
-write(*,*)maxS
+
+!call mpi_barrier(MPI_COMM_WORLD, mpiErr)
+
+
+if (mpiRank /= 0) then
+  do k=1,(mpiSize-1)
+   if (mpiRank==k) then
+    call mpi_send(thread_x1, 1, MPI_INTEGER4, 0, 5*(k-1), MPI_COMM_WORLD, mpiErr)
+    call mpi_send(thread_x2, 1, MPI_INTEGER4, 0, 5*(k-1)+1, MPI_COMM_WORLD, mpiErr)
+    call mpi_send(thread_y1, 1, MPI_INTEGER4, 0, 5*(k-1)+2, MPI_COMM_WORLD, mpiErr)
+    call mpi_send(thread_y2, 1, MPI_INTEGER4, 0, 5*(k-1)+3, MPI_COMM_WORLD, mpiErr)
+    call mpi_send(thread_maxSumm, 1, MPI_REAL8, 0, 5*(k-1)+4, MPI_COMM_WORLD, mpiErr)
+   endif
+  enddo
+else
+
+   do k=1,(mpiSize-1)
+    call mpi_recv(thread_x1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1), MPI_COMM_WORLD, status, mpiErr)
+    call mpi_recv(thread_x2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+1, MPI_COMM_WORLD, status, mpiErr)
+    call mpi_recv(thread_y1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+2, MPI_COMM_WORLD, status, mpiErr)
+    call mpi_recv(thread_y2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+3, MPI_COMM_WORLD, status, mpiErr)
+    call mpi_recv(thread_maxSumm, 1, MPI_REAL8, MPI_ANY_SOURCE, 5*(k-1)+4, MPI_COMM_WORLD, status, mpiErr)
+    !write(*,*)tx1, tx2, ty1, ty2
+    if (thread_maxSumm>=maxSumm) then
+     maxSumm=thread_maxSumm
+     x1=thread_x1
+     x2=thread_x2
+     y1=thread_y1
+     y2=thread_y2    
+    endif
+   enddo
+endif
+
+!call mpi_barrier(MPI_COMM_WORLD, mpiErr)
+
+call mpi_bcast(x1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
+call mpi_bcast(x2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
+call mpi_bcast(y1, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
+call mpi_bcast(y2, 4, MPI_INTEGER4, 0, MPI_COMM_WORLD, mpiErr)
 end subroutine
 end module
