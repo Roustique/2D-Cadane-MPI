@@ -1,18 +1,16 @@
 M=mpiifort
 I=ifort
-main.out: Homework.o main.o
+main.out: TASK.o Tester.o
 	$(M) $^ -o $@
-main.o: main.f90 matrixsize.mod
+Tester.o: main.f90
 	$(I) -c $<
-Homework.o: Homework.f90
+TASK.o: TASK.f90
 	$(M) -c $<
-matrixsize.mod: MSize.f90
-	$(I) -c $<
 debug: Homeworkdebug maindebug
-	$(M) Homework.o main.o -o maintest.out -g
-Homeworkdebug: Homework.f90
+	$(M) TASK.o Tester.o -o maintest.out -g
+Homeworkdebug: TASK.f90
 	$(M) -c $< -g
-maindebug: main.f90 matrixsize.mod
+maindebug: Tester.f90
 	$(I) -c $< -g
 exe: main.out
-	mpiexec -np 4 ./main.out < vvod
+	mpiexec -np 4 ./main.out
