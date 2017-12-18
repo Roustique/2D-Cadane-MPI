@@ -16,7 +16,7 @@ Alength=size(A(1,:))
 call mpi_comm_size(MPI_COMM_WORLD, mpiSize, mpiErr)
 call mpi_comm_rank(MPI_COMM_WORLD, mpiRank, mpiErr)
 
-do i=mpiRank,Alength,(mpiSize-1)
+do i=(mpiRank+1),Alength,mpiSize
 
  do k=1,Aheight
   B(k)=0
@@ -52,12 +52,15 @@ do i=mpiRank,Alength,(mpiSize-1)
  enddo
 enddo
 
-!call mpi_barrier(MPI_COMM_WORLD, mpiErr)
 
-
-if (mpiRank /= 0) then
-  do k=1,(mpiSize-1)
-   if (mpiRank==k) then
+  do k=0,(mpiSize-1)
+   if (mpiRank==0) then
+    maxSumm=thread_maxSumm
+    x1=thread_x1
+    x2=thread_x2
+    y1=thread_y1
+    y2=thread_y2
+   elseif ((mpiRank==k).AND.(mpiRank/=0)) then
     call mpi_send(thread_x1, 1, MPI_INTEGER4, 0, 5*(k-1), MPI_COMM_WORLD, mpiErr)
     call mpi_send(thread_x2, 1, MPI_INTEGER4, 0, 5*(k-1)+1, MPI_COMM_WORLD, mpiErr)
     call mpi_send(thread_y1, 1, MPI_INTEGER4, 0, 5*(k-1)+2, MPI_COMM_WORLD, mpiErr)
@@ -65,15 +68,13 @@ if (mpiRank /= 0) then
     call mpi_send(thread_maxSumm, 1, MPI_REAL8, 0, 5*(k-1)+4, MPI_COMM_WORLD, mpiErr)
    endif
   enddo
-else
-
+if (mpiRank == 0) then
    do k=1,(mpiSize-1)
     call mpi_recv(thread_x1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1), MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(thread_x2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+1, MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(thread_y1, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+2, MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(thread_y2, 1, MPI_INTEGER4, MPI_ANY_SOURCE, 5*(k-1)+3, MPI_COMM_WORLD, status, mpiErr)
     call mpi_recv(thread_maxSumm, 1, MPI_REAL8, MPI_ANY_SOURCE, 5*(k-1)+4, MPI_COMM_WORLD, status, mpiErr)
-    !write(*,*)tx1, tx2, ty1, ty2
     if (thread_maxSumm>=maxSumm) then
      maxSumm=thread_maxSumm
      x1=thread_x1
